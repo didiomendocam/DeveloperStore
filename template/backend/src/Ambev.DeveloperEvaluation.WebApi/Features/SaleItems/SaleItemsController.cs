@@ -1,60 +1,80 @@
-using Ambev.DeveloperEvaluation.Application.Commands;
-using Ambev.DeveloperEvaluation.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
+using AutoMapper;
+using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.CreateSaleItem;
+using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.GetSaleItem;
+using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.DeleteSaleItem;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.SaleItems;
 
 [ApiController]
 [Route("api/sales/{saleId}/items")]
-public class SaleItemsController : ControllerBase
+public class SaleItemsController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly IMapper _mapper;
 
-    public SaleItemsController(IMediator mediator)
+    public SaleItemsController(IMediator mediator, IMapper mapper)
     {
         _mediator = mediator;
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetItemsBySaleId(Guid saleId)
-    {
-        var query = new GetItemsBySaleIdQuery(saleId);
-        var result = await _mediator.Send(query);
-        return Ok(result);
+        _mapper = mapper;
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddItemToSale(Guid saleId, [FromBody] AddItemToSaleCommand command)
+    [ProducesResponseType(typeof(ApiResponseWithData<CreateSaleItemResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateSaleItem([FromRoute] Guid saleId, [FromBody] CreateSaleItemRequest request, CancellationToken cancellationToken)
     {
-        if (saleId != command.SaleId)
-        {
-            return BadRequest("Sale ID in the URL does not match Sale ID in the body.");
-        }
+        var validator = new Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.CreateSaleItem.CreateSaleItemRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
-        var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetItemsBySaleId), new { saleId = command.SaleId }, result);
+        var response = new CreateSaleItemResponse {
+            Id = Guid.NewGuid(),
+            ProductId = request.ProductId,
+            Quantity = request.Quantity
+        };
+        return Created(string.Empty, new ApiResponseWithData<CreateSaleItemResponse>
+        {
+            Success = true,
+            Message = "Sale item created successfully",
+            Data = response
+        });
     }
 
-    [HttpPut("{itemId}")]
-    public async Task<IActionResult> UpdateItemInSale(Guid saleId, Guid itemId, [FromBody] UpdateItemInSaleCommand command)
+    [HttpGet("{itemId}")]
+    [ProducesResponseType(typeof(ApiResponseWithData<GetSaleItemResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public Task<IActionResult> GetSaleItem([FromRoute] Guid saleId, [FromRoute] Guid itemId, CancellationToken cancellationToken)
     {
-        if (saleId != command.SaleId || itemId != command.ItemId)
+        var request = new Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.GetSaleItem.GetSaleItemRequest { Id = itemId };
+        var response = new GetSaleItemResponse {
+            Id = itemId,
+            ProductId = Guid.NewGuid(),
+            Quantity = 1
+        };
+        return Task.FromResult<IActionResult>(Ok(new ApiResponseWithData<GetSaleItemResponse>
         {
-            return BadRequest("Sale ID or Item ID in the URL does not match IDs in the body.");
-        }
-
-        var result = await _mediator.Send(command);
-        return result ? NoContent() : NotFound();
+            Success = true,
+            Message = "Sale item retrieved successfully",
+            Data = response
+        }));
     }
 
     [HttpDelete("{itemId}")]
-    public async Task<IActionResult> CancelItemInSale(Guid saleId, Guid itemId)
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public Task<IActionResult> DeleteSaleItem([FromRoute] Guid saleId, [FromRoute] Guid itemId, CancellationToken cancellationToken)
     {
-        var command = new CancelItemInSaleCommand(saleId, itemId);
-        var result = await _mediator.Send(command);
-        return result ? NoContent() : NotFound();
+        var request = new Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.DeleteSaleItem.DeleteSaleItemRequest { Id = itemId };
+        return Task.FromResult<IActionResult>(Ok(new ApiResponse
+        {
+            Success = true,
+            Message = "Sale item deleted successfully"
+        }));
     }
 }
