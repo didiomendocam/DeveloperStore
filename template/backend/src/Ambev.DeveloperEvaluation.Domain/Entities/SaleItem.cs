@@ -13,7 +13,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
         /// <summary>
         /// Sale entity associated with this item.
         /// </summary>
-        public Sale Sale { get; set; }
+        public required Sale Sale { get; set; }
 
         /// <summary>
         /// Identifier of the product being sold.
@@ -23,7 +23,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
         /// <summary>
         /// Product entity associated with this item.
         /// </summary>
-        public Product Product { get; set; }
+        public required Product Product { get; set; }
 
         /// <summary>
         /// Quantity of the product being sold.
