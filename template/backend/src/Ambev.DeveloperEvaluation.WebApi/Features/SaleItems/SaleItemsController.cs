@@ -5,9 +5,9 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.CreateSaleItem;
 using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.GetSaleItem;
 using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.DeleteSaleItem;
-using Ambev.DeveloperEvaluation.Application.SaleItems.Commands.CreateSaleItem;
-using Ambev.DeveloperEvaluation.Application.SaleItems.Queries.GetSaleItem;
-using Ambev.DeveloperEvaluation.Application.SaleItems.Commands.DeleteSaleItem;
+using Ambev.DeveloperEvaluation.Application.SaleItems.CreateSaleItem;
+using Ambev.DeveloperEvaluation.Application.SaleItems.DeleteSaleItem;
+using Ambev.DeveloperEvaluation.Common.Validation;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.SaleItems;
 
@@ -32,7 +32,12 @@ public class SaleItemsController : BaseController
         var validator = new CreateSaleItemRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<CreateSaleItemCommand>(request);
         command.SaleId = saleId;
@@ -55,10 +60,14 @@ public class SaleItemsController : BaseController
         var validator = new GetSaleItemRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var query = _mapper.Map<GetSaleItemQuery>(request);
-        query.SaleId = saleId;
         var response = await _mediator.Send(query, cancellationToken);
         return Ok(new ApiResponseWithData<GetSaleItemResponse>
         {
@@ -78,10 +87,14 @@ public class SaleItemsController : BaseController
         var validator = new DeleteSaleItemRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<DeleteSaleItemCommand>(request);
-        command.SaleId = saleId;
         await _mediator.Send(command, cancellationToken);
         return Ok(new ApiResponse
         {

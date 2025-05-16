@@ -7,6 +7,7 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Branches.GetBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.DeleteBranch;
 using Ambev.DeveloperEvaluation.Application.Branchs.CreateBranch;
 using Ambev.DeveloperEvaluation.Application.Branchs.DeleteBranch;
+using Ambev.DeveloperEvaluation.Common.Validation;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Branches;
 
@@ -31,7 +32,12 @@ public class BranchesController : BaseController
         var validator = new CreateBranchRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<CreateBranchCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
@@ -53,7 +59,12 @@ public class BranchesController : BaseController
         var validator = new GetBranchRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var query = _mapper.Map<GetBranchQuery>(request);
         var response = await _mediator.Send(query, cancellationToken);
@@ -75,7 +86,12 @@ public class BranchesController : BaseController
         var validator = new DeleteBranchRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<DeleteBranchCommand>(request);
         await _mediator.Send(command, cancellationToken);

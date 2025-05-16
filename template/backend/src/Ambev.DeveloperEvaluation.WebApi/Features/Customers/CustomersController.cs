@@ -8,6 +8,7 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Customers.DeleteCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
 using Ambev.DeveloperEvaluation.Application.Customers.CreateCustomer;
 using Ambev.DeveloperEvaluation.Application.Customers.DeleteCustomer;
+using Ambev.DeveloperEvaluation.Common.Validation;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers;
 
@@ -32,7 +33,12 @@ public class CustomersController : BaseController
         var validator = new CreateCustomerRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<CreateCustomerCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
@@ -54,7 +60,12 @@ public class CustomersController : BaseController
         var validator = new GetCustomerRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var query = _mapper.Map<GetCustomerQuery>(request);
         var response = await _mediator.Send(query, cancellationToken);
@@ -76,7 +87,12 @@ public class CustomersController : BaseController
         var validator = new DeleteCustomerRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<DeleteCustomerCommand>(request);
         await _mediator.Send(command, cancellationToken);
@@ -95,7 +111,12 @@ public class CustomersController : BaseController
         var validator = new ListCustomersRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var query = _mapper.Map<ListCustomersQuery>(request);
         var result = await _mediator.Send(query, cancellationToken);
