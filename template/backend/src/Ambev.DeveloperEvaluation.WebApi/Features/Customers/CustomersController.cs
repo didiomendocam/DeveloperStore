@@ -120,12 +120,7 @@ public class CustomersController : BaseController
 
         var query = _mapper.Map<ListCustomersQuery>(request);
         var result = await _mediator.Send(query, cancellationToken);
-        var pagedList = await PaginatedList<ListCustomersResponse>.CreateAsync(
-            result.Customers.AsQueryable(),
-            request.PageNumber,
-            request.PageSize
-        );
 
-        return OkPaginated(pagedList);
+        return OkPaginated(result);
     }
 }

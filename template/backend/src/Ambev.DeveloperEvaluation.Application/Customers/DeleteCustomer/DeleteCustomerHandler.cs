@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Customers.DeleteCustomer;
 
@@ -20,8 +21,9 @@ public class DeleteCustomerHandler : IRequestHandler<DeleteCustomerCommand, Dele
     {
         var customer = await _customerRepository.GetByIdAsync(command.Id, cancellationToken);
         if (customer == null)
-            throw new Exception("Customer not found");
-        // await _customerRepository.DeleteAsync(customer, cancellationToken);
+            throw new EntityNotFoundException("Customer", command.Id);
+            
+        await _customerRepository.DeleteAsync(customer, cancellationToken);
         return new DeleteCustomerResult { Id = customer.Id };
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Customers.GetCustomer;
 
@@ -20,7 +21,7 @@ public class GetCustomerHandler : IRequestHandler<GetCustomerQuery, GetCustomerR
     {
         var customer = await _customerRepository.GetByIdAsync(query.Id, cancellationToken);
         if (customer == null)
-            throw new Exception("Customer not found");
+            throw new EntityNotFoundException("Customer", query.Id);
         return _mapper.Map<GetCustomerResult>(customer);
     }
 }

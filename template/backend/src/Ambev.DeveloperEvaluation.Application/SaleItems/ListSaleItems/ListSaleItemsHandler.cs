@@ -16,14 +16,12 @@ public class ListSaleItemsHandler : IRequestHandler<ListSaleItemsQuery, ListSale
         _mapper = mapper;
     }
 
-    public Task<ListSaleItemsResult> Handle(ListSaleItemsQuery query, CancellationToken cancellationToken)
+    public async Task<ListSaleItemsResult> Handle(ListSaleItemsQuery query, CancellationToken cancellationToken)
     {
-        // Implementação fictícia, pois não há GetAllAsync no repositório
-        // var saleItems = await _saleItemRepository.GetAllAsync(cancellationToken);
-        // return new ListSaleItemsResult
-        // {
-        //     SaleItems = _mapper.Map<List<SaleItemDto>>(saleItems)
-        // };
-        return Task.FromResult(new ListSaleItemsResult());
+        var saleItems = await _saleItemRepository.GetBySaleIdAsync(query.SaleId, cancellationToken);
+        return new ListSaleItemsResult
+        {
+            SaleItems = _mapper.Map<List<SaleItemDto>>(saleItems)
+        };
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 
@@ -20,7 +21,7 @@ public class GetSaleHandler : IRequestHandler<GetSaleQuery, GetSaleResult>
     {
         var sale = await _saleRepository.GetByIdAsync(query.Id, cancellationToken);
         if (sale == null)
-            throw new Exception("Sale not found");
+            throw new EntityNotFoundException("Sale", query.Id);
         return _mapper.Map<GetSaleResult>(sale);
     }
 }

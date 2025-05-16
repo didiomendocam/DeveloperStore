@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
@@ -21,9 +22,10 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
     {
         var sale = await _saleRepository.GetByIdAsync(command.Id, cancellationToken);
         if (sale == null)
-            throw new Exception("Sale not found");
+            throw new EntityNotFoundException("Sale", command.Id);
+            
         _mapper.Map(command, sale);
-        // await _saleRepository.UpdateAsync(sale, cancellationToken);
+        await _saleRepository.UpdateAsync(sale, cancellationToken);
         return _mapper.Map<UpdateSaleResult>(sale);
     }
 }

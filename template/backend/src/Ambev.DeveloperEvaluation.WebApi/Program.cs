@@ -9,6 +9,9 @@ using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Polly;
+using Polly.Retry;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
 
@@ -26,7 +29,11 @@ public class Program
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
-            builder.AddBasicHealthChecks();
+            // Add health checks
+            builder.Services.AddHealthChecks()
+                .AddDbContextCheck<DefaultContext>("database", tags: new[] { "ready" });
+            builder.Services.AddHealthChecks(builder.Configuration);
+
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -89,10 +96,10 @@ public class Program
                 });
 
                 // Add response examples
-                options.ExampleFilters();
+                // options.ExampleFilters();
 
                 // Add operation filters
-                options.OperationFilter<AddRequiredHeaderParameter>();
+                // options.OperationFilter<AddRequiredHeaderParameter>();
             });
 
             builder.Services.AddDbContext<DefaultContext>(options =>
@@ -103,6 +110,17 @@ public class Program
             );
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
+
+            builder.Services.AddResiliencePipeline("database-retry", pipeline =>
+            {
+                pipeline.AddRetry(new RetryStrategyOptions
+                {
+                    MaxRetryAttempts = 5,
+                    Delay = TimeSpan.FromSeconds(2),
+                    BackoffType = DelayBackoffType.Exponential,
+                    ShouldHandle = new PredicateBuilder().Handle<Exception>()
+                });
+            });
 
             builder.RegisterDependencies();
 
@@ -119,6 +137,27 @@ public class Program
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             var app = builder.Build();
+
+            // Ensure database is created and migrations are applied
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                var context = services.GetRequiredService<DefaultContext>();
+
+                try
+                {
+                    logger.LogInformation("Applying database migrations...");
+                    context.Database.Migrate();
+                    logger.LogInformation("Database migrations applied successfully");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while applying database migrations");
+                    throw;
+                }
+            }
+
             app.UseMiddleware<ValidationExceptionMiddleware>();
 
             if (app.Environment.IsDevelopment())
@@ -132,7 +171,31 @@ public class Program
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseBasicHealthChecks();
+            // Use health checks
+            app.UseHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = async (context, report) =>
+                {
+                    context.Response.ContentType = "application/json";
+                    var response = new
+                    {
+                        status = report.Status.ToString(),
+                        checks = report.Entries.Select(x => new
+                        {
+                            name = x.Key,
+                            status = x.Value.Status.ToString(),
+                            description = x.Value.Description,
+                            duration = x.Value.Duration.ToString()
+                        })
+                    };
+                    await context.Response.WriteAsJsonAsync(response);
+                }
+            });
+
+            app.UseHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = (check) => check.Tags.Contains("ready")
+            });
 
             app.MapControllers();
 

@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.Application.SaleItems.Queries.ListSaleItems;
+using Ambev.DeveloperEvaluation.Application.Common.Models;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.SaleItems.ListSaleItems;

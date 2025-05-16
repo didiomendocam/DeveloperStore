@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Branchs.UpdateBranch;
 
@@ -21,9 +22,10 @@ public class UpdateBranchHandler : IRequestHandler<UpdateBranchCommand, UpdateBr
     {
         var branch = await _branchRepository.GetByIdAsync(command.Id, cancellationToken);
         if (branch == null)
-            throw new Exception("Branch not found");
+            throw new EntityNotFoundException("Branch", command.Id);
+            
         _mapper.Map(command, branch);
-        // await _branchRepository.UpdateAsync(branch, cancellationToken);
+        await _branchRepository.UpdateAsync(branch, cancellationToken);
         return _mapper.Map<UpdateBranchResult>(branch);
     }
 }

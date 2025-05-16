@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.SaleItems.UpdateSaleItem;
 
@@ -17,14 +18,15 @@ public class UpdateSaleItemHandler : IRequestHandler<UpdateSaleItemCommand, Upda
         _mapper = mapper;
     }
 
-    public Task<UpdateSaleItemResult> Handle(UpdateSaleItemCommand command, CancellationToken cancellationToken)
+    public async Task<UpdateSaleItemResult> Handle(UpdateSaleItemCommand command, CancellationToken cancellationToken)
     {
-        // Implementação fictícia, pois não há GetByIdAsync/UpdateAsync no repositório
-        // var saleItem = await _saleItemRepository.GetByIdAsync(command.Id);
-        // if (saleItem == null)
-        //     throw new Exception("SaleItem not found");
-        // _mapper.Map(command, saleItem);
-        // await _saleItemRepository.UpdateAsync(saleItem);
-        return Task.FromResult(new UpdateSaleItemResult { Id = command.Id });
+        var saleItem = await _saleItemRepository.GetByIdAsync(command.Id, cancellationToken);
+        if (saleItem == null)
+            throw new EntityNotFoundException("SaleItem", command.Id);
+            
+        _mapper.Map(command, saleItem);
+        await _saleItemRepository.ApplyBusinessRulesAsync(saleItem, cancellationToken);
+        await _saleItemRepository.UpdateAsync(saleItem, cancellationToken);
+        return _mapper.Map<UpdateSaleItemResult>(saleItem);
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 
@@ -20,8 +21,9 @@ public class DeleteSaleHandler : IRequestHandler<DeleteSaleCommand, DeleteSaleRe
     {
         var sale = await _saleRepository.GetByIdAsync(command.Id, cancellationToken);
         if (sale == null)
-            throw new Exception("Sale not found");
-        // await _saleRepository.DeleteAsync(sale, cancellationToken);
+            throw new EntityNotFoundException("Sale", command.Id);
+            
+        await _saleRepository.DeleteAsync(sale, cancellationToken);
         return new DeleteSaleResult { Id = sale.Id };
     }
 }

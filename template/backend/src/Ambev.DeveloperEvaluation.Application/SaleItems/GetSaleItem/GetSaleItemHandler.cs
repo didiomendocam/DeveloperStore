@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.SaleItems.GetSaleItem;
 
@@ -16,12 +17,11 @@ public class GetSaleItemHandler : IRequestHandler<GetSaleItemQuery, GetSaleItemR
         _mapper = mapper;
     }
 
-    public Task<GetSaleItemResult> Handle(GetSaleItemQuery query, CancellationToken cancellationToken)
+    public async Task<GetSaleItemResult> Handle(GetSaleItemQuery query, CancellationToken cancellationToken)
     {
-        // Implementação fictícia, pois não há GetByIdAsync no repositório
-        // var saleItem = await _saleItemRepository.GetByIdAsync(query.Id);
-        // if (saleItem == null)
-        //     throw new Exception("SaleItem not found");
-        return Task.FromResult(new GetSaleItemResult { Id = query.Id });
+        var saleItem = await _saleItemRepository.GetByIdAsync(query.Id, cancellationToken);
+        if (saleItem == null)
+            throw new EntityNotFoundException("SaleItem", query.Id);
+        return _mapper.Map<GetSaleItemResult>(saleItem);
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Branchs.DeleteBranch;
 
@@ -20,8 +21,9 @@ public class DeleteBranchHandler : IRequestHandler<DeleteBranchCommand, DeleteBr
     {
         var branch = await _branchRepository.GetByIdAsync(command.Id, cancellationToken);
         if (branch == null)
-            throw new Exception("Branch not found");
-        // await _branchRepository.DeleteAsync(branch, cancellationToken);
+            throw new EntityNotFoundException("Branch", command.Id);
+            
+        await _branchRepository.DeleteAsync(branch, cancellationToken);
         return new DeleteBranchResult { Id = branch.Id };
     }
 }

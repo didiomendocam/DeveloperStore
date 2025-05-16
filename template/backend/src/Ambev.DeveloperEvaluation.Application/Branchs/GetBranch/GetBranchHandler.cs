@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Branchs.GetBranch;
 
@@ -20,7 +21,7 @@ public class GetBranchHandler : IRequestHandler<GetBranchQuery, GetBranchResult>
     {
         var branch = await _branchRepository.GetByIdAsync(query.Id, cancellationToken);
         if (branch == null)
-            throw new Exception("Branch not found");
+            throw new EntityNotFoundException("Branch", query.Id);
         return _mapper.Map<GetBranchResult>(branch);
     }
 }

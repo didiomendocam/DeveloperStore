@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -17,20 +18,41 @@ public class SaleItemRepository : ISaleItemRepository
         _context = context;
     }
 
-    public async Task AddAsync(SaleItem saleItem)
+    public async Task AddAsync(SaleItem saleItem, CancellationToken cancellationToken = default)
     {
-        await _context.Set<SaleItem>().AddAsync(saleItem);
-        await _context.SaveChangesAsync();
+        await _context.Set<SaleItem>().AddAsync(saleItem, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<SaleItem>> GetBySaleIdAsync(Guid saleId)
+    public async Task<SaleItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<SaleItem>()
-            .Where(item => item.SaleId == saleId)
-            .ToListAsync();
+            .Include(item => item.Sale)
+            .Include(item => item.Product)
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
     }
 
-    public async Task ApplyBusinessRulesAsync(SaleItem saleItem)
+    public async Task<IEnumerable<SaleItem>> GetBySaleIdAsync(Guid saleId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<SaleItem>()
+            .Include(item => item.Product)
+            .Where(item => item.SaleId == saleId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(SaleItem saleItem, CancellationToken cancellationToken = default)
+    {
+        _context.Set<SaleItem>().Update(saleItem);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(SaleItem saleItem, CancellationToken cancellationToken = default)
+    {
+        _context.Set<SaleItem>().Remove(saleItem);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ApplyBusinessRulesAsync(SaleItem saleItem, CancellationToken cancellationToken = default)
     {
         if (saleItem.Quantity < 4)
         {
@@ -50,6 +72,6 @@ public class SaleItemRepository : ISaleItemRepository
         }
 
         saleItem.TotalAmount = (saleItem.UnitPrice - saleItem.Discount) * saleItem.Quantity;
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

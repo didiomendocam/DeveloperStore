@@ -31,4 +31,16 @@ public class CustomerRepository : ICustomerRepository
     {
         return await _context.Set<Customer>().ToListAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(Customer customer, CancellationToken cancellationToken = default)
+    {
+        _context.Set<Customer>().Update(customer);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Customer customer, CancellationToken cancellationToken = default)
+    {
+        _context.Set<Customer>().Remove(customer);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -1,3 +1,4 @@
+using Ambev.DeveloperEvaluation.Application.Interfaces;
 using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using AutoMapper;
@@ -8,7 +9,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
 
 public class ListCustomersQueryHandler : IRequestHandler<ListCustomersQuery, PaginatedList<ListCustomersResponse>>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
 
     public ListCustomersQueryHandler(IApplicationDbContext context, IMapper mapper)
@@ -26,8 +27,8 @@ public class ListCustomersQueryHandler : IRequestHandler<ListCustomersQuery, Pag
             var searchTerm = request.SearchTerm.ToLower();
             query = query.Where(c =>
                 c.Name.ToLower().Contains(searchTerm) ||
-                c.Email.ToLower().Contains(searchTerm) ||
-                c.Document.ToLower().Contains(searchTerm));
+                c.Document.ToLower().Contains(searchTerm) ||
+                c.Contact.ToLower().Contains(searchTerm));
         }
 
         if (!string.IsNullOrWhiteSpace(request.SortBy))
@@ -37,12 +38,12 @@ public class ListCustomersQueryHandler : IRequestHandler<ListCustomersQuery, Pag
                 "name" => request.SortDescending
                     ? query.OrderByDescending(c => c.Name)
                     : query.OrderBy(c => c.Name),
-                "email" => request.SortDescending
-                    ? query.OrderByDescending(c => c.Email)
-                    : query.OrderBy(c => c.Email),
                 "document" => request.SortDescending
                     ? query.OrderByDescending(c => c.Document)
                     : query.OrderBy(c => c.Document),
+                "contact" => request.SortDescending
+                    ? query.OrderByDescending(c => c.Contact)
+                    : query.OrderBy(c => c.Contact),
                 _ => query.OrderBy(c => c.Name)
             };
         }

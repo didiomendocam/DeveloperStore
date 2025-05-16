@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.SaleItems.DeleteSaleItem;
 
@@ -16,13 +17,13 @@ public class DeleteSaleItemHandler : IRequestHandler<DeleteSaleItemCommand, Dele
         _mapper = mapper;
     }
 
-    public Task<DeleteSaleItemResult> Handle(DeleteSaleItemCommand command, CancellationToken cancellationToken)
+    public async Task<DeleteSaleItemResult> Handle(DeleteSaleItemCommand command, CancellationToken cancellationToken)
     {
-        // Implementação fictícia, pois não há DeleteAsync no repositório
-        // var saleItem = await _saleItemRepository.GetByIdAsync(command.Id);
-        // if (saleItem == null)
-        //     throw new Exception("SaleItem not found");
-        // await _saleItemRepository.DeleteAsync(saleItem);
-        return Task.FromResult(new DeleteSaleItemResult { Id = command.Id });
+        var saleItem = await _saleItemRepository.GetByIdAsync(command.Id, cancellationToken);
+        if (saleItem == null)
+            throw new EntityNotFoundException("SaleItem", command.Id);
+            
+        await _saleItemRepository.DeleteAsync(saleItem, cancellationToken);
+        return new DeleteSaleItemResult { Id = saleItem.Id };
     }
 }
