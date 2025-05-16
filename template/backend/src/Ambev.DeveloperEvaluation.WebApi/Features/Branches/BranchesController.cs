@@ -5,6 +5,9 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.CreateBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.GetBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.DeleteBranch;
+using Ambev.DeveloperEvaluation.Application.Branches.Commands.CreateBranch;
+using Ambev.DeveloperEvaluation.Application.Branches.Queries.GetBranch;
+using Ambev.DeveloperEvaluation.Application.Branches.Commands.DeleteBranch;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Branches;
 
@@ -31,21 +34,13 @@ public class BranchesController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // Aqui você pode mapear para um comando de aplicação se necessário
-        // var command = _mapper.Map<CreateBranchCommand>(request);
-        // var response = await _mediator.Send(command, cancellationToken);
-        // Supondo que o handler retorne um CreateBranchResponse
-        var response = new CreateBranchResponse {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            Address = request.Address,
-            BranchCode = request.BranchCode
-        };
+        var command = _mapper.Map<CreateBranchCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
         return Created(string.Empty, new ApiResponseWithData<CreateBranchResponse>
         {
             Success = true,
             Message = "Branch created successfully",
-            Data = response
+            Data = _mapper.Map<CreateBranchResponse>(response)
         });
     }
 
@@ -61,19 +56,13 @@ public class BranchesController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var query = _mapper.Map<GetBranchQuery>(request);
-        // var response = await _mediator.Send(query, cancellationToken);
-        var response = new GetBranchResponse {
-            Id = id,
-            Name = "Branch Name",
-            Address = "Branch Address",
-            BranchCode = "BR001"
-        };
+        var query = _mapper.Map<GetBranchQuery>(request);
+        var response = await _mediator.Send(query, cancellationToken);
         return Ok(new ApiResponseWithData<GetBranchResponse>
         {
             Success = true,
             Message = "Branch retrieved successfully",
-            Data = response
+            Data = _mapper.Map<GetBranchResponse>(response)
         });
     }
 
@@ -89,8 +78,8 @@ public class BranchesController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var command = _mapper.Map<DeleteBranchCommand>(request);
-        // await _mediator.Send(command, cancellationToken);
+        var command = _mapper.Map<DeleteBranchCommand>(request);
+        await _mediator.Send(command, cancellationToken);
         return Ok(new ApiResponse
         {
             Success = true,

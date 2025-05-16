@@ -6,6 +6,9 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.ListSales;
+using Ambev.DeveloperEvaluation.Application.Sales.Commands.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.Queries.GetSale;
+using Ambev.DeveloperEvaluation.Application.Sales.Commands.DeleteSale;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -27,30 +30,18 @@ public class SalesController : BaseController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
     {
-        var validator = new Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale.CreateSaleRequestValidator();
+        var validator = new CreateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var command = _mapper.Map<CreateSaleCommand>(request);
-        // var response = await _mediator.Send(command, cancellationToken);
-        var response = new CreateSaleResponse {
-            Id = Guid.NewGuid(),
-            SaleNumber = request.SaleNumber,
-            SaleDate = request.SaleDate,
-            CustomerId = request.CustomerId,
-            BranchId = request.BranchId,
-            Items = request.Items.Select(i => new CreateSaleItemResponse {
-                Id = Guid.NewGuid(),
-                ProductId = i.ProductId,
-                Quantity = i.Quantity
-            }).ToList()
-        };
+        var command = _mapper.Map<CreateSaleCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
         return Created(string.Empty, new ApiResponseWithData<CreateSaleResponse>
         {
             Success = true,
             Message = "Sale created successfully",
-            Data = response
+            Data = _mapper.Map<CreateSaleResponse>(response)
         });
     }
 
@@ -60,26 +51,19 @@ public class SalesController : BaseController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSale([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var request = new Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale.GetSaleRequest { Id = id };
-        var validator = new Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale.GetSaleRequestValidator();
+        var request = new GetSaleRequest { Id = id };
+        var validator = new GetSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var query = _mapper.Map<GetSaleQuery>(request);
-        // var response = await _mediator.Send(query, cancellationToken);
-        var response = new GetSaleResponse {
-            Id = id,
-            SaleNumber = "SALE-001",
-            SaleDate = DateTime.UtcNow,
-            CustomerId = Guid.NewGuid(),
-            BranchId = Guid.NewGuid()
-        };
+        var query = _mapper.Map<GetSaleQuery>(request);
+        var response = await _mediator.Send(query, cancellationToken);
         return Ok(new ApiResponseWithData<GetSaleResponse>
         {
             Success = true,
             Message = "Sale retrieved successfully",
-            Data = response
+            Data = _mapper.Map<GetSaleResponse>(response)
         });
     }
 
@@ -89,14 +73,14 @@ public class SalesController : BaseController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSale([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var request = new Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale.DeleteSaleRequest { Id = id };
-        var validator = new Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale.DeleteSaleRequestValidator();
+        var request = new DeleteSaleRequest { Id = id };
+        var validator = new DeleteSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var command = _mapper.Map<DeleteSaleCommand>(request);
-        // await _mediator.Send(command, cancellationToken);
+        var command = _mapper.Map<DeleteSaleCommand>(request);
+        await _mediator.Send(command, cancellationToken);
         return Ok(new ApiResponse
         {
             Success = true,

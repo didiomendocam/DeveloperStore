@@ -6,6 +6,8 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Customers.CreateCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.GetCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.DeleteCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
+using Ambev.DeveloperEvaluation.Application.Customers.Commands.CreateCustomer;
+using Ambev.DeveloperEvaluation.Application.Customers.Queries.GetCustomer;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers;
 
@@ -32,19 +34,13 @@ public class CustomersController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var command = _mapper.Map<CreateCustomerCommand>(request);
-        // var response = await _mediator.Send(command, cancellationToken);
-        var response = new CreateCustomerResponse {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            Document = request.Document,
-            Contact = request.Contact
-        };
+        var command = _mapper.Map<CreateCustomerCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
         return Created(string.Empty, new ApiResponseWithData<CreateCustomerResponse>
         {
             Success = true,
             Message = "Customer created successfully",
-            Data = response
+            Data = _mapper.Map<CreateCustomerResponse>(response)
         });
     }
 
@@ -60,19 +56,13 @@ public class CustomersController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var query = _mapper.Map<GetCustomerQuery>(request);
-        // var response = await _mediator.Send(query, cancellationToken);
-        var response = new GetCustomerResponse {
-            Id = id,
-            Name = "Customer Name",
-            Document = "12345678900",
-            Contact = "customer@email.com"
-        };
+        var query = _mapper.Map<GetCustomerQuery>(request);
+        var response = await _mediator.Send(query, cancellationToken);
         return Ok(new ApiResponseWithData<GetCustomerResponse>
         {
             Success = true,
             Message = "Customer retrieved successfully",
-            Data = response
+            Data = _mapper.Map<GetCustomerResponse>(response)
         });
     }
 
@@ -88,8 +78,8 @@ public class CustomersController : BaseController
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        // var command = _mapper.Map<DeleteCustomerCommand>(request);
-        // await _mediator.Send(command, cancellationToken);
+        var command = _mapper.Map<DeleteCustomerCommand>(request);
+        await _mediator.Send(command, cancellationToken);
         return Ok(new ApiResponse
         {
             Success = true,
