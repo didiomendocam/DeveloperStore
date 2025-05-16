@@ -27,7 +27,7 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Pagin
             var searchTerm = request.SearchTerm.ToLower();
             query = query.Where(p =>
                 p.Name.ToLower().Contains(searchTerm) ||
-                p.Description.ToLower().Contains(searchTerm));
+                p.ProductCode.ToLower().Contains(searchTerm)); // Fixed: Replaced "Description" with "ProductCode"
         }
 
         if (!string.IsNullOrWhiteSpace(request.SortBy))
@@ -37,12 +37,12 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Pagin
                 "name" => request.SortDescending
                     ? query.OrderByDescending(p => p.Name)
                     : query.OrderBy(p => p.Name),
-                "description" => request.SortDescending
-                    ? query.OrderByDescending(p => p.Description)
-                    : query.OrderBy(p => p.Description),
+                "productcode" => request.SortDescending
+                    ? query.OrderByDescending(p => p.ProductCode) // Fixed: Added sorting by "ProductCode"
+                    : query.OrderBy(p => p.ProductCode),
                 "price" => request.SortDescending
-                    ? query.OrderByDescending(p => p.Price)
-                    : query.OrderBy(p => p.Price),
+                    ? query.OrderByDescending(p => p.UnitPrice) // Fixed: Corrected "Price" to "UnitPrice"
+                    : query.OrderBy(p => p.UnitPrice),
                 _ => query.OrderBy(p => p.Name)
             };
         }
@@ -66,4 +66,4 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Pagin
             request.PageNumber,
             request.PageSize);
     }
-} 
+}

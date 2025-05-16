@@ -3,6 +3,7 @@ using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
@@ -24,16 +25,39 @@ public class SaleRepository : ISaleRepository
 
     public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Sale>().FindAsync(new object[] { id }, cancellationToken);
+        return await _context.Set<Sale>()
+            .Include(s => s.Customer)
+            .Include(s => s.Branch)
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Sale>().ToListAsync(cancellationToken);
+        return await _context.Set<Sale>()
+            .Include(s => s.Customer)
+            .Include(s => s.Branch)
+            .Include(s => s.Items)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
+    {
+        _context.Set<Sale>().Update(sale);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Sale sale, CancellationToken cancellationToken = default)
+    {
+        _context.Set<Sale>().Remove(sale);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public IQueryable<Sale> Query()
     {
-        return _context.Set<Sale>();
+        return _context.Set<Sale>()
+            .Include(s => s.Customer)
+            .Include(s => s.Branch)
+            .Include(s => s.Items);
     }
 }

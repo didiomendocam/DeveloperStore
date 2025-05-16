@@ -42,18 +42,19 @@ public class BranchRepository : IBranchRepository
     public async Task Add(Branch branch)
     {
         await _context.Branches.AddAsync(branch);
+        await _context.SaveChangesAsync();
     }
 
-    public Task Update(Branch branch)
+    public async Task Update(Branch branch)
     {
         _context.Branches.Update(branch);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
-    public Task Delete(Branch branch)
+    public async Task Delete(Branch branch)
     {
         _context.Branches.Remove(branch);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     public async Task SaveChanges()

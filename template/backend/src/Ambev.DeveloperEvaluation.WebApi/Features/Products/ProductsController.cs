@@ -67,11 +67,11 @@ public class ProductsController : BaseController
         };
 
         var result = await _mediator.Send(query);
-        // result deve ser PaginatedList<ListProductsResponse>
+        // Explicitly map the PaginatedList<T> to PaginatedResponse<T>
         var paginatedResponse = new PaginatedResponse<ListProductsResponse>
         {
-            Data = result,
-            CurrentPage = result.CurrentPage,
+            Data = result.Items, // Use the Items property to get IEnumerable<T>
+            CurrentPage = result.PageNumber,
             TotalPages = result.TotalPages,
             TotalCount = result.TotalCount,
             Success = true

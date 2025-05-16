@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.Application.Branches.CreateBranch;
+using Ambev.DeveloperEvaluation.Application.Branchs.CreateBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.CreateBranch;
 using AutoMapper;
 

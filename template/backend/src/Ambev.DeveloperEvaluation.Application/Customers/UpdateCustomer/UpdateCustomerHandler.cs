@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Common.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Application.Customers.UpdateCustomer;
 
@@ -21,9 +22,10 @@ public class UpdateCustomerHandler : IRequestHandler<UpdateCustomerCommand, Upda
     {
         var customer = await _customerRepository.GetByIdAsync(command.Id, cancellationToken);
         if (customer == null)
-            throw new Exception("Customer not found");
+            throw new EntityNotFoundException("Customer", command.Id);
+            
         _mapper.Map(command, customer);
-        // await _customerRepository.UpdateAsync(customer, cancellationToken);
+        await _customerRepository.UpdateAsync(customer, cancellationToken);
         return _mapper.Map<UpdateCustomerResult>(customer);
     }
 }
