@@ -1,31 +1,63 @@
-using Ambev.DeveloperEvaluation.Domain.Entities;
-using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Domain.Branchs;
+using Ambev.DeveloperEvaluation.Domain.Branchs.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
 public class BranchRepository : IBranchRepository
 {
-    private readonly DbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public BranchRepository(DbContext context)
+    public BranchRepository(ApplicationDbContext context)
     {
         _context = context;
     }
 
-    public async Task AddAsync(Branch branch, CancellationToken cancellationToken = default)
+    public async Task<Branch?> GetById(Guid id)
     {
-        await _context.Set<Branch>().AddAsync(branch, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        return await _context.Branches.FindAsync(id);
     }
 
-    public async Task<Branch?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Branch>> GetAll()
     {
-        return await _context.Set<Branch>().FindAsync(new object[] { id }, cancellationToken);
+        return await _context.Branches.ToListAsync();
     }
 
-    public async Task<IEnumerable<Branch>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Branch>> GetActive()
     {
-        return await _context.Set<Branch>().ToListAsync(cancellationToken);
+        return await _context.Branches.Where(b => b.IsActive).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Branch>> GetBySearchTerm(string searchTerm)
+    {
+        return await _context.Branches
+            .Where(b => b.Name.Contains(searchTerm) ||
+                       b.Cnpj.Contains(searchTerm) ||
+                       b.Address.Contains(searchTerm) ||
+                       b.Phone.Contains(searchTerm) ||
+                       b.Email.Contains(searchTerm))
+            .ToListAsync();
+    }
+
+    public async Task Add(Branch branch)
+    {
+        await _context.Branches.AddAsync(branch);
+    }
+
+    public Task Update(Branch branch)
+    {
+        _context.Branches.Update(branch);
+        return Task.CompletedTask;
+    }
+
+    public Task Delete(Branch branch)
+    {
+        _context.Branches.Remove(branch);
+        return Task.CompletedTask;
+    }
+
+    public async Task SaveChanges()
+    {
+        await _context.SaveChangesAsync();
     }
 }
