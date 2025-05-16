@@ -31,4 +31,9 @@ public class SaleRepository : ISaleRepository
     {
         return await _context.Set<Sale>().ToListAsync(cancellationToken);
     }
+
+    public IQueryable<Sale> Query()
+    {
+        return _context.Set<Sale>();
+    }
 }

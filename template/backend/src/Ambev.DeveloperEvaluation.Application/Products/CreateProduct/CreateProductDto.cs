@@ -12,7 +12,7 @@ public class CreateProductDto
     /// </summary>
     [Required(ErrorMessage = "Product name is required")]
     [StringLength(100, ErrorMessage = "Product name must be between 1 and 100 characters")]
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Description of the product.
@@ -38,4 +38,4 @@ public class CreateProductDto
     /// Indicates if the product is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
-} 
+}

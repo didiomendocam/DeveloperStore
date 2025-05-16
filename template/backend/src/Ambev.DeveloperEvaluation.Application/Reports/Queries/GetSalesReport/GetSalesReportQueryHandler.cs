@@ -1,6 +1,8 @@
-using Ambev.DeveloperEvaluation.Application.Common.Interfaces; // Adicione este using
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Ambev.DeveloperEvaluation.Domain.Repositories;
+using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 
 namespace Ambev.DeveloperEvaluation.Application.Reports.Queries.GetSalesReport;
 
@@ -9,21 +11,21 @@ namespace Ambev.DeveloperEvaluation.Application.Reports.Queries.GetSalesReport;
 /// </summary>
 public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, GetSalesReportResult>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISaleRepository _salesRepository;
 
-    public GetSalesReportQueryHandler(IUnitOfWork unitOfWork)
+    public GetSalesReportQueryHandler(ISaleRepository salesRepository)
     {
-        _unitOfWork = unitOfWork;
+        _salesRepository = salesRepository;
     }
 
     public async Task<GetSalesReportResult> Handle(GetSalesReportQuery request, CancellationToken cancellationToken)
     {
-        var salesQuery = _unitOfWork.SalesRepository.GetQueryable()
+        var salesQuery = _salesRepository.Query()
             .Include(s => s.Customer)
             .Include(s => s.Branch)
-            .Include(s => s.Items)
+            .Include(s => s.Items!)
                 .ThenInclude(i => i.Product)
-            .Where(s => s.CreatedAt >= request.StartDate && s.CreatedAt <= request.EndDate);
+            .Where(s => s.SaleDate >= request.StartDate && s.SaleDate <= request.EndDate);
 
         if (request.CustomerId.HasValue)
             salesQuery = salesQuery.Where(s => s.CustomerId == request.CustomerId.Value);
@@ -32,13 +34,13 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
             salesQuery = salesQuery.Where(s => s.BranchId == request.BranchId.Value);
 
         if (request.ProductId.HasValue)
-            salesQuery = salesQuery.Where(s => s.Items.Any(i => i.ProductId == request.ProductId.Value));
+            salesQuery = salesQuery.Where(s => (s.Items != null && s.Items.Any(i => i.ProductId == request.ProductId.Value)));
 
         if (request.Status.HasValue)
-            salesQuery = salesQuery.Where(s => s.Status == request.Status.Value);
+            salesQuery = salesQuery.Where(s => s.Status == (SaleStatus)request.Status.Value);
 
-        if (!request.IncludeCancelled ?? false)
-            salesQuery = salesQuery.Where(s => s.Status != 3); // 3 = Cancelled
+        if (request.IncludeCancelled == false)
+            salesQuery = salesQuery.Where(s => s.Status != SaleStatus.Cancelled);
 
         var sales = await salesQuery.ToListAsync(cancellationToken);
 
@@ -46,7 +48,7 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
         {
             TotalSales = sales.Count,
             TotalRevenue = sales.Sum(s => s.TotalAmount),
-            TotalItemsSold = sales.Sum(s => s.Items.Sum(i => i.Quantity))
+            TotalItemsSold = sales.Sum(s => s.Items != null ? s.Items.Sum(i => i.Quantity) : 0)
         };
 
         result.AverageSaleValue = result.TotalSales > 0 ? result.TotalRevenue / result.TotalSales : 0;
@@ -56,26 +58,26 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
         {
             result.Groups = request.GroupBy.ToLower() switch
             {
-                "customer" => sales.GroupBy(s => new { s.CustomerId, s.Customer.Name })
+                "customer" => sales.GroupBy(s => new { s.CustomerId, Name = s.Customer?.Name ?? string.Empty })
                     .Select(g => new SalesGroupResult
                     {
                         Key = g.Key.Name,
                         SalesCount = g.Count(),
                         Revenue = g.Sum(s => s.TotalAmount),
-                        ItemsSold = g.Sum(s => s.Items.Sum(i => i.Quantity))
+                        ItemsSold = g.Sum(s => s.Items != null ? s.Items.Sum(i => i.Quantity) : 0)
                     }).ToList(),
 
-                "branch" => sales.GroupBy(s => new { s.BranchId, s.Branch.Name })
+                "branch" => sales.GroupBy(s => new { s.BranchId, Name = s.Branch?.Name ?? string.Empty })
                     .Select(g => new SalesGroupResult
                     {
                         Key = g.Key.Name,
                         SalesCount = g.Count(),
                         Revenue = g.Sum(s => s.TotalAmount),
-                        ItemsSold = g.Sum(s => s.Items.Sum(i => i.Quantity))
+                        ItemsSold = g.Sum(s => s.Items != null ? s.Items.Sum(i => i.Quantity) : 0)
                     }).ToList(),
 
-                "product" => sales.SelectMany(s => s.Items)
-                    .GroupBy(i => new { i.ProductId, i.Product.Name })
+                "product" => sales.SelectMany(s => s.Items ?? Array.Empty<SaleItem>())
+                    .GroupBy(i => new { i.ProductId, Name = i.Product?.Name ?? string.Empty })
                     .Select(g => new SalesGroupResult
                     {
                         Key = g.Key.Name,
@@ -84,13 +86,13 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
                         ItemsSold = g.Sum(i => i.Quantity)
                     }).ToList(),
 
-                "date" => sales.GroupBy(s => s.CreatedAt.Date)
+                "date" => sales.GroupBy(s => s.SaleDate.Date)
                     .Select(g => new SalesGroupResult
                     {
                         Key = g.Key.ToShortDateString(),
                         SalesCount = g.Count(),
                         Revenue = g.Sum(s => s.TotalAmount),
-                        ItemsSold = g.Sum(s => s.Items.Sum(i => i.Quantity))
+                        ItemsSold = g.Sum(s => s.Items != null ? s.Items.Sum(i => i.Quantity) : 0)
                     }).ToList(),
 
                 _ => new List<SalesGroupResult>()
@@ -98,8 +100,8 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
         }
 
         // Get top products
-        result.TopProducts = sales.SelectMany(s => s.Items)
-            .GroupBy(i => new { i.ProductId, i.Product.Name })
+        result.TopProducts = sales.SelectMany(s => s.Items ?? Array.Empty<SaleItem>())
+            .GroupBy(i => new { i.ProductId, Name = i.Product?.Name ?? string.Empty })
             .Select(g => new TopProductResult
             {
                 ProductId = g.Key.ProductId,
@@ -112,7 +114,7 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
             .ToList();
 
         // Get top customers
-        result.TopCustomers = sales.GroupBy(s => new { s.CustomerId, s.Customer.Name })
+        result.TopCustomers = sales.GroupBy(s => new { s.CustomerId, Name = s.Customer?.Name ?? string.Empty })
             .Select(g => new TopCustomerResult
             {
                 CustomerId = g.Key.CustomerId,
@@ -126,4 +128,4 @@ public class GetSalesReportQueryHandler : IRequestHandler<GetSalesReportQuery, G
 
         return result;
     }
-} 
+}
