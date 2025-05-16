@@ -3,21 +3,13 @@ using Ambev.DeveloperEvaluation.Domain.Common;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities
 {
-    public class Customer : BaseEntity
+    public class Customer : BaseEntity, IComparable<BaseEntity>
     {
-        /// <summary>
-        /// Full name of the customer.
-        /// </summary>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Document number of the customer (CPF or CNPJ).
-        /// </summary>
         public string Document { get; set; }
-
-        /// <summary>
-        /// Contact information of the customer (e.g., phone or email).
-        /// </summary>
         public string Contact { get; set; }
+
+        // Adicionando a propriedade IsActive para corrigir o erro CS1061  
+        public bool IsActive { get; set; }
     }
 }

@@ -1,10 +1,6 @@
-using Ambev.DeveloperEvaluation.WebApi.Features.SaleItems;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using Xunit;
 using MediatR;
-using System;
-using System.Threading.Tasks;
 
 namespace Ambev.DeveloperEvaluation.Unit.WebApi.Controllers;
 

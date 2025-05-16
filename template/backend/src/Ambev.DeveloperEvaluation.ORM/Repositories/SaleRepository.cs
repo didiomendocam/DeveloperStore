@@ -16,19 +16,19 @@ public class SaleRepository : ISaleRepository
         _context = context;
     }
 
-    public async Task AddAsync(Sale sale)
+    public async Task AddAsync(Sale sale, CancellationToken cancellationToken = default)
     {
-        await _context.Set<Sale>().AddAsync(sale);
-        await _context.SaveChangesAsync();
+        await _context.Set<Sale>().AddAsync(sale, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Sale?> GetByIdAsync(Guid id)
+    public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Sale>().FindAsync(id);
+        return await _context.Set<Sale>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<IEnumerable<Sale>> GetAllAsync()
+    public async Task<IEnumerable<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Sale>().ToListAsync();
+        return await _context.Set<Sale>().ToListAsync(cancellationToken);
     }
 }

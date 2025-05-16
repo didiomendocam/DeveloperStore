@@ -16,19 +16,19 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task AddAsync(Product product)
+    public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
-        await _context.Set<Product>().AddAsync(product);
-        await _context.SaveChangesAsync();
+        await _context.Set<Product>().AddAsync(product, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Product?> GetByIdAsync(Guid id)
+    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Product>().FindAsync(id);
+        return await _context.Set<Product>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<IEnumerable<Product>> GetAllAsync()
+    public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Product>().ToListAsync();
+        return await _context.Set<Product>().ToListAsync(cancellationToken);
     }
 }

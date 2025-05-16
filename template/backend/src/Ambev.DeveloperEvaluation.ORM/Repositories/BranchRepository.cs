@@ -1,9 +1,6 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories;
 
@@ -16,19 +13,19 @@ public class BranchRepository : IBranchRepository
         _context = context;
     }
 
-    public async Task AddAsync(Branch branch)
+    public async Task AddAsync(Branch branch, CancellationToken cancellationToken = default)
     {
-        await _context.Set<Branch>().AddAsync(branch);
-        await _context.SaveChangesAsync();
+        await _context.Set<Branch>().AddAsync(branch, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Branch?> GetByIdAsync(Guid id)
+    public async Task<Branch?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Branch>().FindAsync(id);
+        return await _context.Set<Branch>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<IEnumerable<Branch>> GetAllAsync()
+    public async Task<IEnumerable<Branch>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Branch>().ToListAsync();
+        return await _context.Set<Branch>().ToListAsync(cancellationToken);
     }
 }

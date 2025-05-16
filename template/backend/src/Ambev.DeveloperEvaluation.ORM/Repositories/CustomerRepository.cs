@@ -16,19 +16,19 @@ public class CustomerRepository : ICustomerRepository
         _context = context;
     }
 
-    public async Task AddAsync(Customer customer)
+    public async Task AddAsync(Customer customer, CancellationToken cancellationToken = default)
     {
-        await _context.Set<Customer>().AddAsync(customer);
-        await _context.SaveChangesAsync();
+        await _context.Set<Customer>().AddAsync(customer, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Customer?> GetByIdAsync(Guid id)
+    public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Customer>().FindAsync(id);
+        return await _context.Set<Customer>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<IEnumerable<Customer>> GetAllAsync()
+    public async Task<IEnumerable<Customer>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<Customer>().ToListAsync();
+        return await _context.Set<Customer>().ToListAsync(cancellationToken);
     }
 }

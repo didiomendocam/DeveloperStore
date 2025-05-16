@@ -13,7 +13,7 @@ public class CustomerValidator : AbstractValidator<Customer>
 
         RuleFor(customer => customer.Document)
             .NotEmpty().WithMessage("Customer document cannot be empty.")
-            .Matches("^(\d{11}|\d{14})$").WithMessage("Document must be a valid CPF (11 digits) or CNPJ (14 digits).");
+            .Matches(@"^(\d{11}|\d{14})$").WithMessage("Document must be a valid CPF (11 digits) or CNPJ (14 digits).");
 
         RuleFor(customer => customer.Contact)
             .NotEmpty().WithMessage("Customer contact cannot be empty.")

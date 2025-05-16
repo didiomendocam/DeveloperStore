@@ -4,6 +4,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers.CreateCustomer;
 
 public class CreateCustomerRequestValidator : AbstractValidator<CreateCustomerRequest>
 {
+    // Constructor renamed to avoid conflict with the existing constructor
     public CreateCustomerRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
