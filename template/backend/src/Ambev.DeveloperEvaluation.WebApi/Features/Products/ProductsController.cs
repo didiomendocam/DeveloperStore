@@ -5,20 +5,66 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.ListProducts;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.UpdateProduct;
+using Ambev.DeveloperEvaluation.WebApi.Models;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Products;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ProductsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
+    private readonly IValidator<CreateProductRequest> _createProductRequestValidator;
+    private readonly IValidator<UpdateProductRequest> _updateProductRequestValidator;
+    private readonly IValidator<ListProductsRequest> _listProductsRequestValidator;
 
-    public ProductsController(IMediator mediator, IMapper mapper)
+    public ProductsController(
+        IMediator mediator,
+        IMapper mapper,
+        IValidator<CreateProductRequest> createProductRequestValidator,
+        IValidator<UpdateProductRequest> updateProductRequestValidator,
+        IValidator<ListProductsRequest> listProductsRequestValidator)
     {
         _mediator = mediator;
         _mapper = mapper;
+        _createProductRequestValidator = createProductRequestValidator;
+        _updateProductRequestValidator = updateProductRequestValidator;
+        _listProductsRequestValidator = listProductsRequestValidator;
+    }
+
+    /// <summary>
+    /// Lista produtos com paginação
+    /// </summary>
+    /// <param name="request">Parâmetros de paginação e filtros</param>
+    /// <returns>Lista paginada de produtos</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResponse<ListProductsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListProducts([FromQuery] ListProductsRequest request)
+    {
+        var validationResult = await _listProductsRequestValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ValidationErrorResponse(validationResult.Errors));
+        }
+
+        var query = new ListProductsQuery
+        {
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            SearchTerm = request.SearchTerm,
+            SortBy = request.SortBy,
+            SortDescending = request.SortDescending
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(new PaginatedResponse<ListProductsResponse>(result));
     }
 
     [HttpPost]

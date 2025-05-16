@@ -1,11 +1,6 @@
-namespace Ambev.DeveloperEvaluation.Application.Sales.ListSales;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.ListSales;
 
-public class ListSalesResult
-{
-    public List<SaleDto> Sales { get; set; } = new();
-}
-
-public class SaleDto
+public class ListSalesResponse
 {
     public Guid Id { get; set; }
     public string? SaleNumber { get; set; }
@@ -17,4 +12,5 @@ public class SaleDto
     public decimal TotalAmount { get; set; }
     public bool IsCancelled { get; set; }
     public int Status { get; set; }
-}
+    public int TotalItems { get; set; }
+} 

@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.CreateCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.GetCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.DeleteCustomer;
+using Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers;
 
@@ -94,5 +95,26 @@ public class CustomersController : BaseController
             Success = true,
             Message = "Customer deleted successfully"
         });
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResponse<ListCustomersResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListCustomers([FromQuery] ListCustomersRequest request, CancellationToken cancellationToken)
+    {
+        var validator = new ListCustomersRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var query = _mapper.Map<ListCustomersQuery>(request);
+        var result = await _mediator.Send(query, cancellationToken);
+        var pagedList = await PaginatedList<ListCustomersResponse>.CreateAsync(
+            result.Customers.AsQueryable(),
+            request.PageNumber,
+            request.PageSize
+        );
+
+        return OkPaginated(pagedList);
     }
 }

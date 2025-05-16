@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.ListSales;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -101,5 +102,26 @@ public class SalesController : BaseController
             Success = true,
             Message = "Sale deleted successfully"
         });
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResponse<ListSalesResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListSales([FromQuery] ListSalesRequest request, CancellationToken cancellationToken)
+    {
+        var validator = new ListSalesRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var query = _mapper.Map<ListSalesQuery>(request);
+        var result = await _mediator.Send(query, cancellationToken);
+        var pagedList = await PaginatedList<ListSalesResponse>.CreateAsync(
+            result.Sales.AsQueryable(),
+            request.PageNumber,
+            request.PageSize
+        );
+
+        return OkPaginated(pagedList);
     }
 }
