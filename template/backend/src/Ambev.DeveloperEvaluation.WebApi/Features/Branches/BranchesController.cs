@@ -5,9 +5,8 @@ using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.CreateBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.GetBranch;
 using Ambev.DeveloperEvaluation.WebApi.Features.Branches.DeleteBranch;
-using Ambev.DeveloperEvaluation.Application.Branches.Commands.CreateBranch;
-using Ambev.DeveloperEvaluation.Application.Branches.Queries.GetBranch;
-using Ambev.DeveloperEvaluation.Application.Branches.Commands.DeleteBranch;
+using Ambev.DeveloperEvaluation.Application.Branchs.CreateBranch;
+using Ambev.DeveloperEvaluation.Application.Branchs.DeleteBranch;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Branches;
 

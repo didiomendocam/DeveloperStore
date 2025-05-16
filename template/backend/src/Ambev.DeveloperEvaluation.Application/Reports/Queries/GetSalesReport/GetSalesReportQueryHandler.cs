@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.Domain.Interfaces;
+using Ambev.DeveloperEvaluation.Application.Common.Interfaces; // Adicione este using
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

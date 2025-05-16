@@ -6,9 +6,9 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.ListSales;
-using Ambev.DeveloperEvaluation.Application.Sales.Commands.CreateSale;
-using Ambev.DeveloperEvaluation.Application.Sales.Queries.GetSale;
-using Ambev.DeveloperEvaluation.Application.Sales.Commands.DeleteSale;
+using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
+using Ambev.DeveloperEvaluation.Application.Sales.ListSales;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -100,8 +100,12 @@ public class SalesController : BaseController
 
         var query = _mapper.Map<ListSalesQuery>(request);
         var result = await _mediator.Send(query, cancellationToken);
+        var mappedSales = result.Sales
+            .Select(sale => _mapper.Map<ListSalesResponse>(sale))
+            .AsQueryable();
+
         var pagedList = await PaginatedList<ListSalesResponse>.CreateAsync(
-            result.Sales.AsQueryable(),
+            mappedSales,
             request.PageNumber,
             request.PageSize
         );

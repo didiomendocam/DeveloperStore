@@ -6,13 +6,11 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.ListProducts;
-using Ambev.DeveloperEvaluation.WebApi.Features.Products.UpdateProduct;
-using Ambev.DeveloperEvaluation.WebApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
-using Ambev.DeveloperEvaluation.Application.Products.Commands.CreateProduct;
-using Ambev.DeveloperEvaluation.Application.Products.Queries.GetProduct;
-using Ambev.DeveloperEvaluation.Application.Products.Commands.DeleteProduct;
+using Ambev.DeveloperEvaluation.Application.Products.DeleteProduct;
+using Ambev.DeveloperEvaluation.Application.Products.CreateProduct;
+using Ambev.DeveloperEvaluation.Common.Validation;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Products;
 
@@ -24,20 +22,17 @@ public class ProductsController : BaseController
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
     private readonly IValidator<CreateProductRequest> _createProductRequestValidator;
-    private readonly IValidator<UpdateProductRequest> _updateProductRequestValidator;
     private readonly IValidator<ListProductsRequest> _listProductsRequestValidator;
 
     public ProductsController(
         IMediator mediator,
         IMapper mapper,
         IValidator<CreateProductRequest> createProductRequestValidator,
-        IValidator<UpdateProductRequest> updateProductRequestValidator,
         IValidator<ListProductsRequest> listProductsRequestValidator)
     {
         _mediator = mediator;
         _mapper = mapper;
         _createProductRequestValidator = createProductRequestValidator;
-        _updateProductRequestValidator = updateProductRequestValidator;
         _listProductsRequestValidator = listProductsRequestValidator;
     }
 
@@ -48,13 +43,18 @@ public class ProductsController : BaseController
     /// <returns>Lista paginada de produtos</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PaginatedResponse<ListProductsResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListProducts([FromQuery] ListProductsRequest request)
     {
         var validationResult = await _listProductsRequestValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
-            return BadRequest(new ValidationErrorResponse(validationResult.Errors));
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
         }
 
         var query = new ListProductsQuery
@@ -67,7 +67,16 @@ public class ProductsController : BaseController
         };
 
         var result = await _mediator.Send(query);
-        return Ok(new PaginatedResponse<ListProductsResponse>(result));
+        // result deve ser PaginatedList<ListProductsResponse>
+        var paginatedResponse = new PaginatedResponse<ListProductsResponse>
+        {
+            Data = result,
+            CurrentPage = result.CurrentPage,
+            TotalPages = result.TotalPages,
+            TotalCount = result.TotalCount,
+            Success = true
+        };
+        return Ok(paginatedResponse);
     }
 
     [HttpPost]
@@ -77,7 +86,12 @@ public class ProductsController : BaseController
     {
         var validationResult = await _createProductRequestValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(new ValidationErrorResponse(validationResult.Errors));
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<CreateProductCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
@@ -99,7 +113,12 @@ public class ProductsController : BaseController
         var validator = new GetProductRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var query = _mapper.Map<GetProductQuery>(request);
         var response = await _mediator.Send(query, cancellationToken);
@@ -121,7 +140,12 @@ public class ProductsController : BaseController
         var validator = new DeleteProductRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
+            return BadRequest(new ApiResponse
+            {
+                Success = false,
+                Message = "Validation failed",
+                Errors = validationResult.Errors.Select(e => (ValidationErrorDetail)e).ToList()
+            });
 
         var command = _mapper.Map<DeleteProductCommand>(request);
         await _mediator.Send(command, cancellationToken);

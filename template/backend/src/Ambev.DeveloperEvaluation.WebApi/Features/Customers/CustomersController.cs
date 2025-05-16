@@ -6,8 +6,8 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Customers.CreateCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.GetCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.DeleteCustomer;
 using Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
-using Ambev.DeveloperEvaluation.Application.Customers.Commands.CreateCustomer;
-using Ambev.DeveloperEvaluation.Application.Customers.Queries.GetCustomer;
+using Ambev.DeveloperEvaluation.Application.Customers.CreateCustomer;
+using Ambev.DeveloperEvaluation.Application.Customers.DeleteCustomer;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers;
 
