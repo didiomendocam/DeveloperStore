@@ -136,15 +136,33 @@ public class Program
 
             builder.Services.AddMediatR(cfg =>
             {
-                cfg.RegisterServicesFromAssemblies(
-                    typeof(ApplicationLayer).Assembly,
-                    typeof(Program).Assembly
-                );
+                try
+                {
+                    Console.WriteLine("Registering MediatR services...");
+                    cfg.RegisterServicesFromAssemblies(
+                        typeof(ApplicationLayer).Assembly,
+                        typeof(Program).Assembly
+                    );
+                    Console.WriteLine("MediatR services registered successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error registering MediatR services: {ex}");
+                    throw;
+                }
             });
             Console.WriteLine("MediatR configured");
 
-            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-            Console.WriteLine("Validation behavior configured");
+            try
+            {
+                builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+                Console.WriteLine("Validation behavior configured");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error configuring validation behavior: {ex}");
+                throw;
+            }
 
             var app = builder.Build();
             Console.WriteLine("WebApplication built");
@@ -172,55 +190,64 @@ public class Program
                 }
             }
 
-            app.UseMiddleware<ValidationExceptionMiddleware>();
-            Console.WriteLine("Validation middleware configured");
-
-            if (app.Environment.IsDevelopment())
+            try
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-                Console.WriteLine("Swagger UI configured");
-            }
+                app.UseMiddleware<ValidationExceptionMiddleware>();
+                Console.WriteLine("Validation middleware configured");
 
-            app.UseHttpsRedirection();
-            Console.WriteLine("HTTPS redirection configured");
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-            Console.WriteLine("Authentication and authorization configured");
-
-            // Use health checks
-            app.UseHealthChecks("/health", new HealthCheckOptions
-            {
-                ResponseWriter = async (context, report) =>
+                if (app.Environment.IsDevelopment())
                 {
-                    context.Response.ContentType = "application/json";
-                    var response = new
-                    {
-                        status = report.Status.ToString(),
-                        checks = report.Entries.Select(x => new
-                        {
-                            name = x.Key,
-                            status = x.Value.Status.ToString(),
-                            description = x.Value.Description,
-                            duration = x.Value.Duration.ToString()
-                        })
-                    };
-                    await context.Response.WriteAsJsonAsync(response);
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                    Console.WriteLine("Swagger UI configured");
                 }
-            });
-            Console.WriteLine("Health checks endpoints configured");
 
-            app.UseHealthChecks("/health/ready", new HealthCheckOptions
+                app.UseHttpsRedirection();
+                Console.WriteLine("HTTPS redirection configured");
+
+                app.UseAuthentication();
+                app.UseAuthorization();
+                Console.WriteLine("Authentication and authorization configured");
+
+                // Use health checks
+                app.UseHealthChecks("/health", new HealthCheckOptions
+                {
+                    ResponseWriter = async (context, report) =>
+                    {
+                        context.Response.ContentType = "application/json";
+                        var response = new
+                        {
+                            status = report.Status.ToString(),
+                            checks = report.Entries.Select(x => new
+                            {
+                                name = x.Key,
+                                status = x.Value.Status.ToString(),
+                                description = x.Value.Description,
+                                duration = x.Value.Duration.ToString()
+                            })
+                        };
+                        await context.Response.WriteAsJsonAsync(response);
+                    }
+                });
+                Console.WriteLine("Health checks endpoints configured");
+
+                app.UseHealthChecks("/health/ready", new HealthCheckOptions
+                {
+                    Predicate = (check) => check.Tags.Contains("ready")
+                });
+
+                app.MapControllers();
+                Console.WriteLine("Controllers mapped");
+
+                Console.WriteLine("Starting the application...");
+                app.Run();
+            }
+            catch (Exception ex)
             {
-                Predicate = (check) => check.Tags.Contains("ready")
-            });
-
-            app.MapControllers();
-            Console.WriteLine("Controllers mapped");
-
-            Console.WriteLine("Starting the application...");
-            app.Run();
+                Console.WriteLine($"Error during application startup: {ex}");
+                Log.Error(ex, "Error during application startup");
+                throw;
+            }
         }
         catch (Exception ex)
         {
