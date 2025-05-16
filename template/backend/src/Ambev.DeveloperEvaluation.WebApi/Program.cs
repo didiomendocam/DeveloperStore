@@ -21,21 +21,28 @@ public class Program
     {
         try
         {
+            Console.WriteLine("Starting web application...");
             Log.Information("Starting web application");
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            Console.WriteLine("WebApplicationBuilder created");
+            
             builder.AddDefaultLogging();
+            Console.WriteLine("Default logging configured");
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
+            Console.WriteLine("Controllers and API Explorer added");
 
             // Add health checks
             builder.Services.AddHealthChecks()
                 .AddDbContextCheck<DefaultContext>("database", tags: new[] { "ready" });
             builder.Services.AddHealthChecks(builder.Configuration);
+            Console.WriteLine("Health checks configured");
 
             builder.Services.AddSwaggerGen(options =>
             {
+                Console.WriteLine("Configuring Swagger...");
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = "Ambev Developer Evaluation API",
@@ -94,22 +101,20 @@ public class Program
                         new string[] {}
                     }
                 });
-
-                // Add response examples
-                // options.ExampleFilters();
-
-                // Add operation filters
-                // options.OperationFilter<AddRequiredHeaderParameter>();
             });
+            Console.WriteLine("Swagger configured");
 
+            Console.WriteLine("Configuring database connection...");
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly("Ambev.DeveloperEvaluation.ORM")
                 )
             );
+            Console.WriteLine("Database connection configured");
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
+            Console.WriteLine("JWT authentication configured");
 
             builder.Services.AddResiliencePipeline("database-retry", pipeline =>
             {
@@ -121,10 +126,13 @@ public class Program
                     ShouldHandle = new PredicateBuilder().Handle<Exception>()
                 });
             });
+            Console.WriteLine("Resilience pipeline configured");
 
             builder.RegisterDependencies();
+            Console.WriteLine("Dependencies registered");
 
             builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
+            Console.WriteLine("AutoMapper configured");
 
             builder.Services.AddMediatR(cfg =>
             {
@@ -133,10 +141,13 @@ public class Program
                     typeof(Program).Assembly
                 );
             });
+            Console.WriteLine("MediatR configured");
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            Console.WriteLine("Validation behavior configured");
 
             var app = builder.Build();
+            Console.WriteLine("WebApplication built");
 
             // Ensure database is created and migrations are applied
             using (var scope = app.Services.CreateScope())
@@ -147,29 +158,36 @@ public class Program
 
                 try
                 {
+                    Console.WriteLine("Applying database migrations...");
                     logger.LogInformation("Applying database migrations...");
                     context.Database.Migrate();
                     logger.LogInformation("Database migrations applied successfully");
+                    Console.WriteLine("Database migrations applied successfully");
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"Error applying migrations: {ex}");
                     logger.LogError(ex, "An error occurred while applying database migrations");
                     throw;
                 }
             }
 
             app.UseMiddleware<ValidationExceptionMiddleware>();
+            Console.WriteLine("Validation middleware configured");
 
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                Console.WriteLine("Swagger UI configured");
             }
 
             app.UseHttpsRedirection();
+            Console.WriteLine("HTTPS redirection configured");
 
             app.UseAuthentication();
             app.UseAuthorization();
+            Console.WriteLine("Authentication and authorization configured");
 
             // Use health checks
             app.UseHealthChecks("/health", new HealthCheckOptions
@@ -191,6 +209,7 @@ public class Program
                     await context.Response.WriteAsJsonAsync(response);
                 }
             });
+            Console.WriteLine("Health checks endpoints configured");
 
             app.UseHealthChecks("/health/ready", new HealthCheckOptions
             {
@@ -198,11 +217,14 @@ public class Program
             });
 
             app.MapControllers();
+            Console.WriteLine("Controllers mapped");
 
+            Console.WriteLine("Starting the application...");
             app.Run();
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Fatal error: {ex}");
             Log.Fatal(ex, "Application terminated unexpectedly");
         }
         finally
