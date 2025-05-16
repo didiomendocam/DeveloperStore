@@ -84,3 +84,29 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
+
+## Running with Docker and Accessing Swagger
+
+To run the application using Docker and test the API via Swagger UI, follow these steps:
+
+1. Make sure Docker Desktop is installed and running on your machine.
+2. Open your terminal and navigate to the folder containing the `docker-compose.yml` file:
+   ```bash
+   cd "template/backend"
+   ```
+3. Start the containers with:
+   ```bash
+   docker-compose up --build
+   ```
+4. Wait until all services are healthy and the WebApi is running (check the logs in your terminal).
+5. Open your browser and go to:
+   ```
+   http://localhost:5000/swagger
+   ```
+   (or the port configured in your `docker-compose.yml` or `launchSettings.json`).
+6. Use the Swagger UI to test all API endpoints.
+
+To stop the containers after testing, run:
+```bash
+docker-compose down
+```
