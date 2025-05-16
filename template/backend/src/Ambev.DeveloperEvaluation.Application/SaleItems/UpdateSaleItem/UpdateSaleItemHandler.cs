@@ -17,7 +17,7 @@ public class UpdateSaleItemHandler : IRequestHandler<UpdateSaleItemCommand, Upda
         _mapper = mapper;
     }
 
-    public async Task<UpdateSaleItemResult> Handle(UpdateSaleItemCommand command, CancellationToken cancellationToken)
+    public Task<UpdateSaleItemResult> Handle(UpdateSaleItemCommand command, CancellationToken cancellationToken)
     {
         // Implementação fictícia, pois não há GetByIdAsync/UpdateAsync no repositório
         // var saleItem = await _saleItemRepository.GetByIdAsync(command.Id);
@@ -25,6 +25,6 @@ public class UpdateSaleItemHandler : IRequestHandler<UpdateSaleItemCommand, Upda
         //     throw new Exception("SaleItem not found");
         // _mapper.Map(command, saleItem);
         // await _saleItemRepository.UpdateAsync(saleItem);
-        return new UpdateSaleItemResult { Id = command.Id };
+        return Task.FromResult(new UpdateSaleItemResult { Id = command.Id });
     }
 }

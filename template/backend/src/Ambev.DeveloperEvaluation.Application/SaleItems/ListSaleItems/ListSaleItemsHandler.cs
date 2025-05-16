@@ -16,7 +16,7 @@ public class ListSaleItemsHandler : IRequestHandler<ListSaleItemsQuery, ListSale
         _mapper = mapper;
     }
 
-    public async Task<ListSaleItemsResult> Handle(ListSaleItemsQuery query, CancellationToken cancellationToken)
+    public Task<ListSaleItemsResult> Handle(ListSaleItemsQuery query, CancellationToken cancellationToken)
     {
         // Implementação fictícia, pois não há GetAllAsync no repositório
         // var saleItems = await _saleItemRepository.GetAllAsync(cancellationToken);
@@ -24,6 +24,6 @@ public class ListSaleItemsHandler : IRequestHandler<ListSaleItemsQuery, ListSale
         // {
         //     SaleItems = _mapper.Map<List<SaleItemDto>>(saleItems)
         // };
-        return new ListSaleItemsResult();
+        return Task.FromResult(new ListSaleItemsResult());
     }
 }

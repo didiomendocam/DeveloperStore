@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Application.Products.Queries.ListProducts;
+using Ambev.DeveloperEvaluation.Application.Common.Models;
 using Ambev.DeveloperEvaluation.Application.Interfaces;
 using AutoMapper;
 using MediatR;

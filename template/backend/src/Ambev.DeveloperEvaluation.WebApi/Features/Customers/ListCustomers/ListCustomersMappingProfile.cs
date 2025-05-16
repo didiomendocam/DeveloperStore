@@ -1,4 +1,3 @@
-using Ambev.DeveloperEvaluation.Application.Customers.Queries.ListCustomers;
 using AutoMapper;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;

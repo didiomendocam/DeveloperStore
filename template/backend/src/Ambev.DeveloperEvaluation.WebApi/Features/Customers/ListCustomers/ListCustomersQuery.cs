@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.Application.Customers.Queries.ListCustomers;
+using Ambev.DeveloperEvaluation.WebApi.Common;
 using MediatR;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;

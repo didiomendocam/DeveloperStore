@@ -1,5 +1,5 @@
-using Ambev.DeveloperEvaluation.Application.Customers.Queries.ListCustomers;
-using Ambev.DeveloperEvaluation.Application.Interfaces;
+using Ambev.DeveloperEvaluation.ORM;
+using Ambev.DeveloperEvaluation.WebApi.Common;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Customers.ListCustomers;
 
 public class ListCustomersQueryHandler : IRequestHandler<ListCustomersQuery, PaginatedList<ListCustomersResponse>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
 
     public ListCustomersQueryHandler(IApplicationDbContext context, IMapper mapper)
